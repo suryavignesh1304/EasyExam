@@ -58,37 +58,36 @@ def upload_file():
     file = request.files['file']
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
-    if file and file.filename.endswith('.pdf'):
-        try:
-            text = pdf_to_text(file)
-            mcq_list = parse_mcq_text(text)
-
-            questions = []
-            answers = {}
-            for index, mcq in enumerate(mcq_list):
-                questions.append({
-                    "id": index,
-                    "question": mcq["question"],
-                    "options": mcq["options"]
-                })
-                answers[index] = mcq["correct_answer"]
-
-            exam_json = {
-                "title": "Generated Exam",
-                "questions": questions
-            }
-
-            with open('exam_data.json', 'w') as json_file:
-                json.dump(exam_json, json_file, indent=2)
-
-            with open('exam_answers.json', 'w') as json_file:
-                json.dump(answers, json_file, indent=2)
-
-            return jsonify({"message": "Exam data generated successfully"}), 200
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
-    else:
+    if not file or not file.filename.endswith('.pdf'):
         return jsonify({'error': 'Invalid file type'}), 400
+    try:
+        text = pdf_to_text(file)
+        mcq_list = parse_mcq_text(text)
+
+        questions = []
+        answers = {}
+        for index, mcq in enumerate(mcq_list):
+            questions.append({
+                "id": index,
+                "question": mcq["question"],
+                "options": mcq["options"]
+            })
+            answers[index] = mcq["correct_answer"]
+
+        exam_json = {
+            "title": "Generated Exam",
+            "questions": questions
+        }
+
+        with open('exam_data.json', 'w') as json_file:
+            json.dump(exam_json, json_file, indent=2)
+
+        with open('exam_answers.json', 'w') as json_file:
+            json.dump(answers, json_file, indent=2)
+
+        return jsonify({"message": "Exam data generated successfully"}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # Endpoint to retrieve the exam data
 @app.route('/exam', methods=['GET'])
