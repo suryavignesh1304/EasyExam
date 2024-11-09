@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { useState } from 'react'
-import { Upload, FileText, Zap } from 'lucide-react'
+import { Upload, FileText, Zap, Book, FileUp, Edit3, HelpCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 export default function HomePage() {
@@ -23,12 +23,8 @@ export default function HomePage() {
         }
     }
 
-    const handleUploadClick = () => {
-        navigate('/upload')
-    }
-
-    const handleStartConversionClick = () => {
-        navigate('/upload')
+    const handleNavigation = (path: string) => {
+        navigate(path)
     }
 
     return (
@@ -56,7 +52,7 @@ export default function HomePage() {
                         Convert your PDF files into an interactive Computer Based Test format with ease!
                     </motion.p>
                     <motion.button
-                        onClick={handleUploadClick}
+                        onClick={() => handleNavigation('/upload')}
                         className="bg-blue-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-blue-700 transition duration-300 ease-in-out transform hover:scale-105"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -77,17 +73,22 @@ export default function HomePage() {
                     </motion.h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {[
-                            { icon: <Upload size={40} />, title: 'Fast Conversion', description: 'Convert your PDFs in seconds' },
-                            { icon: <FileText size={40} />, title: 'Automatic Extraction', description: 'AI-powered question recognition' },
-                            { icon: <Zap size={40} />, title: 'Customizable Formats', description: 'Tailor the CBT to your needs' }
+                            { icon: <Upload size={40} />, title: 'Fast Conversion', description: 'Convert your PDFs in seconds', path: '/upload' },
+                            { icon: <FileText size={40} />, title: 'Automatic Extraction', description: 'AI-powered question recognition', path: '/upload' },
+                            { icon: <Zap size={40} />, title: 'Customizable Formats', description: 'Tailor the CBT to your needs', path: '/upload' },
+                            { icon: <Book size={40} />, title: 'Predefined Exams', description: 'Start with ready-made tests', path: '/predefined-exams' },
+                            { icon: <FileUp size={40} />, title: 'PDF Converter', description: 'Convert PDFs to CBT format', path: '/pdf-converter' },
+                            { icon: <Edit3 size={40} />, title: 'Text to PDF', description: 'Create PDFs from text input', path: '/text-to-pdf' },
+                            { icon: <HelpCircle size={40} />, title: 'PDF Instructions', description: 'Learn about PDF structure', path: '/pdf-instructions' }
                         ].map((feature, index) => (
                             <motion.div
                                 key={index}
-                                className="bg-white p-6 rounded-lg shadow-lg text-center"
+                                className="bg-white p-6 rounded-lg shadow-lg text-center cursor-pointer"
                                 variants={fadeIn}
                                 whileHover={{ scale: 1.05 }}
                                 onHoverStart={() => setIsHovering(`feature-${index}`)}
                                 onHoverEnd={() => setIsHovering('')}
+                                onClick={() => handleNavigation(feature.path)}
                             >
                                 <motion.div
                                     className="text-blue-600 mb-4 inline-block"
@@ -117,7 +118,7 @@ export default function HomePage() {
                         Ready to Transform Your PDFs?
                     </motion.h2>
                     <motion.button
-                        onClick={handleStartConversionClick}
+                        onClick={() => handleNavigation('/upload')}
                         className="bg-green-500 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-green-600 transition duration-300 ease-in-out transform hover:scale-105"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}

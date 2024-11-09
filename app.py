@@ -10,37 +10,6 @@ app = Flask(__name__, static_folder='dist')
 CORS(app)
 
 
-predefined_exams = [
-    {
-        "title": "Biology Basics",
-        "questions": [
-            {
-                "id": 1,
-                "question": "What is needed as a source of energy for vital activities of the body?",
-                "options": ["Carbohydrates", "Proteins", "Fats", "Iron"],
-                "correct_answer": "A"
-            },
-            {
-                "id": 2,
-                "question": "Hemoglobin (Hb) is a protein that is found in the _____ of the blood.",
-                "options": ["Plasma", "Red blood cells", "Platelets", "White blood cells"],
-                "correct_answer": "B"
-            },
-            {
-                "id": 3,
-                "question": "What is essential for the formation of hemoglobin?",
-                "options": ["Iron", "Calcium", "Vitamin C", "Magnesium"],
-                "correct_answer": "A"
-            },
-            {
-                "id": 4,
-                "question": "What is considered a good source of iodine?",
-                "options": ["Fruits", "Sea foods", "Grains", "Vegetables"],
-                "correct_answer": "B"
-            }
-        ]
-    }
-]
 
 # Convert PDF content to text
 def pdf_to_text(pdf_file):
@@ -83,6 +52,84 @@ def parse_mcq_text(text):
         })
 
     return mcq_list
+PREDEFINED_EXAMS = [
+    {
+        "id": "exam1",
+        "title": "General Knowledge Exam 1",
+        "description": "A basic general knowledge exam covering various topics."
+    },
+    {
+        "id": "exam2",
+        "title": "Science Quiz",
+        "description": "Test your knowledge of basic scientific concepts."
+    },
+    {
+        "id": "exam3",
+        "title": "History Challenge",
+        "description": "Explore historical events and figures in this quiz."
+    }
+]
+
+def create_pdf_from_text(text, output_filename):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.multi_cell(0, 10, text)
+    pdf.output(output_filename)
+
+@app.route('/predefined-exams', methods=['GET'])
+def get_predefined_exams():
+    return jsonify(PREDEFINED_EXAMS)
+
+@app.route('/predefined-exam/<exam_id>', methods=['GET'])
+def get_predefined_exam(exam_id):
+    exam_file = f'predefined_exams/{exam_id}.json'
+    try:
+        with open(exam_file, 'r') as json_file:
+            exam_data = json.load(json_file)
+        return jsonify(exam_data), 200
+    except FileNotFoundError:
+        return jsonify({'error': 'Exam not found'}), 404
+
+@app.route('/convert-pdf', methods=['POST'])
+def convert_pdf():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+    if not file or not file.filename.endswith('.pdf'):
+        return jsonify({'error': 'Invalid file type'}), 400
+    try:
+        text = pdf_to_text(file)
+        mcq_list = parse_mcq_text(text)
+        
+        formatted_text = ""
+        for i, mcq in enumerate(mcq_list, 1):
+            formatted_text += f"{i}. {mcq['question']}\n"
+            for option in mcq['options']:
+                formatted_text += f"({option['label']}) {option['text']}\n"
+            formatted_text += f"**Answer:** {mcq['correct_answer']}\n\n"
+        
+        output_filename = 'converted_exam.pdf'
+        create_pdf_from_text(formatted_text, output_filename)
+        
+        return jsonify({"message": "PDF converted successfully", "filename": output_filename}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/text-to-pdf', methods=['POST'])
+def text_to_pdf():
+    data = request.json
+    if not data or 'text' not in data:
+        return jsonify({'error': 'No text provided'}), 400
+    try:
+        output_filename = 'generated_exam.pdf'
+        create_pdf_from_text(data['text'], output_filename)
+        return jsonify({"message": "PDF created successfully", "filename": output_filename}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
 
 # Endpoint to handle PDF uploads and parse MCQs
 @app.route('/upload', methods=['POST'])
@@ -179,29 +226,6 @@ def save_answers():
         return jsonify({'message': 'Answers saved successfully'}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-
-# Endpoint to retrieve predefined exams
-@app.route('/predefined-exams', methods=['GET'])
-def get_predefined_exams():
-    return jsonify(predefined_exams)
-
-# Endpoint to convert user text to PDF
-@app.route('/generate-pdf', methods=['POST'])
-def generate_pdf():
-    data = request.json.get('text')
-    if not data:
-        return jsonify({"error": "No text provided"}), 400
-
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_auto_page_break(auto=True, margin=15)
-    pdf.set_font("Arial", size=12)
-    pdf.multi_cell(0, 10, data)
-    pdf_output_path = 'generated_output.pdf'
-    pdf.output(pdf_output_path)
-
-    return send_file(pdf_output_path, as_attachment=True)
 
 # Serve React frontend
 @app.route('/')
