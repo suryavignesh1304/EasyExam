@@ -11,52 +11,9 @@ CORS(app)
 # Convert PDF content to text
 def pdf_to_text(pdf_file):
     pdf_reader = PyPDF2.PdfReader(pdf_file)
-    text = ""
-    for page in pdf_reader.pages:
-        text += page.extract_text()
-    return text
+    return "".join(page.extract_text() for page in pdf_reader.pages)
 
 # Parse MCQ text from extracted PDF text
-def parse_mcq_text(text):
-    mcq_list = []
-    lines = text.strip().split('\n')
-    current_question = None
-    options = []
-    correct_answer = None
-
-    for line in lines:
-        line = line.strip()
-        
-        # Match question format like "1. What is Python?"
-        question_match = re.match(r'^\d+\.\s*(.+)', line)
-        if question_match:
-            if current_question and options:
-                mcq_list.append({
-                    "question": current_question,
-                    "options": options,
-                    "correct_answer": correct_answer
-                })
-            current_question = question_match.group(1).strip()
-            options = []
-            correct_answer = None
-        elif line.startswith(('(A)', '(B)', '(C)', '(D)')):
-            option = line[3:].strip()
-            options.append(option)
-        elif line.startswith('**Answer:**'):
-            answer_match = re.search(r'\*\*Answer:\*\* (.+)', line)
-            if answer_match:
-                correct_answer = answer_match.group(1).strip()
-
-    if current_question and options:
-        mcq_list.append({
-            "question": current_question,
-            "options": options,
-            "correct_answer": correct_answer
-        })
-
-    return mcq_list
-
-# Endpoint to handle PDF uploads and parse MCQs
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
@@ -90,13 +47,54 @@ def upload_file():
             with open('exam_answers.json', 'w') as json_file:
                 json.dump(answers, json_file, indent=2)
 
-            return jsonify({"message": "Exam data generated successfully"}), 200
+            return jsonify({"message": "Exam data generated successfully", "questionCount": len(questions)}), 200
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     else:
         return jsonify({'error': 'Invalid file type'}), 400
 
-# Endpoint to retrieve the exam data
+@app.route('/configure-exam', methods=['POST'])
+def configure_exam():
+    config = request.json
+    if 'duration' not in config:
+        return jsonify({'error': 'Duration not specified'}), 400
+    
+    try:
+        duration = int(config['duration'])
+        start_time = datetime.now()
+        end_time = start_time + timedelta(minutes=duration)
+        
+        exam_config = {
+            'start_time': start_time.isoformat(),
+            'end_time': end_time.isoformat(),
+            'duration': duration
+        }
+        
+        with open('exam_config.json', 'w') as json_file:
+            json.dump(exam_config, json_file, indent=2)
+        
+        return jsonify({"message": "Exam configured successfully"}), 200
+    except ValueError:
+        return jsonify({'error': 'Invalid duration'}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/start-exam', methods=['GET'])
+def start_exam():
+    try:
+        with open('exam_config.json', 'r') as config_file:
+            exam_config = json.load(config_file)
+        with open('exam_data.json', 'r') as data_file:
+            exam_data = json.load(data_file)
+        
+        response = {
+            **exam_config,
+            **exam_data
+        }
+        return jsonify(response), 200
+    except FileNotFoundError:
+        return jsonify({'error': 'Exam not configured or data not found'}), 404
+
 @app.route('/exam', methods=['GET'])
 def get_exam():
     try:
@@ -106,7 +104,6 @@ def get_exam():
     except FileNotFoundError:
         return jsonify({'error': 'Exam data not found'}), 404
 
-# Endpoint to submit answers and calculate score
 @app.route('/submit', methods=['POST'])
 def submit_exam():
     user_answers = request.json
@@ -142,7 +139,6 @@ def submit_exam():
         'results': results
     })
 
-# Endpoint to save user answers
 @app.route('/save-answers', methods=['POST'])
 def save_answers():
     try:
@@ -153,12 +149,10 @@ def save_answers():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Serve React frontend
 @app.route('/')
 def serve():
     return send_from_directory(app.static_folder, 'index.html')
 
-# Serve any other static file (CSS, JS, etc.)
 @app.route('/<path:path>')
 def serve_static(path):
     return send_from_directory(app.static_folder, path)
