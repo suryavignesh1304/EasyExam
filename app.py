@@ -4,9 +4,43 @@ import PyPDF2
 import json
 import re
 import os
+from fpdf import FPDF
 
 app = Flask(__name__, static_folder='dist')
 CORS(app)
+
+
+predefined_exams = [
+    {
+        "title": "Biology Basics",
+        "questions": [
+            {
+                "id": 1,
+                "question": "What is needed as a source of energy for vital activities of the body?",
+                "options": ["Carbohydrates", "Proteins", "Fats", "Iron"],
+                "correct_answer": "A"
+            },
+            {
+                "id": 2,
+                "question": "Hemoglobin (Hb) is a protein that is found in the _____ of the blood.",
+                "options": ["Plasma", "Red blood cells", "Platelets", "White blood cells"],
+                "correct_answer": "B"
+            },
+            {
+                "id": 3,
+                "question": "What is essential for the formation of hemoglobin?",
+                "options": ["Iron", "Calcium", "Vitamin C", "Magnesium"],
+                "correct_answer": "A"
+            },
+            {
+                "id": 4,
+                "question": "What is considered a good source of iodine?",
+                "options": ["Fruits", "Sea foods", "Grains", "Vegetables"],
+                "correct_answer": "B"
+            }
+        ]
+    }
+]
 
 # Convert PDF content to text
 def pdf_to_text(pdf_file):
@@ -145,6 +179,29 @@ def save_answers():
         return jsonify({'message': 'Answers saved successfully'}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+# Endpoint to retrieve predefined exams
+@app.route('/predefined-exams', methods=['GET'])
+def get_predefined_exams():
+    return jsonify(predefined_exams)
+
+# Endpoint to convert user text to PDF
+@app.route('/generate-pdf', methods=['POST'])
+def generate_pdf():
+    data = request.json.get('text')
+    if not data:
+        return jsonify({"error": "No text provided"}), 400
+
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.set_font("Arial", size=12)
+    pdf.multi_cell(0, 10, data)
+    pdf_output_path = 'generated_output.pdf'
+    pdf.output(pdf_output_path)
+
+    return send_file(pdf_output_path, as_attachment=True)
 
 # Serve React frontend
 @app.route('/')
