@@ -1,6 +1,6 @@
 import axios, { AxiosResponse } from 'axios';
 
-const API_URL = 'http://localhost:5000';
+const API_URL = 'https://exameasy.up.railway.app/';
 
 interface ExamData {
   title: string;
