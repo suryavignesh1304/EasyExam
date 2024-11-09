@@ -1,17 +1,51 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, send_file
 from flask_cors import CORS
 import PyPDF2
 import json
 import re
 import os
+from fpdf import FPDF
 
 app = Flask(__name__, static_folder='dist')
 CORS(app)
 
+# Predefined exam data
+predefined_exams = [
+    {
+        "title": "Biology Basics",
+        "questions": [
+            {
+                "id": 1,
+                "question": "What is needed as a source of energy for vital activities of the body?",
+                "options": ["Carbohydrates", "Proteins", "Fats", "Iron"],
+                "correct_answer": "A"
+            },
+            {
+                "id": 2,
+                "question": "Hemoglobin (Hb) is a protein that is found in the _____ of the blood.",
+                "options": ["Plasma", "Red blood cells", "Platelets", "White blood cells"],
+                "correct_answer": "B"
+            },
+            {
+                "id": 3,
+                "question": "What is essential for the formation of hemoglobin?",
+                "options": ["Iron", "Calcium", "Vitamin C", "Magnesium"],
+                "correct_answer": "A"
+            },
+            {
+                "id": 4,
+                "question": "What is considered a good source of iodine?",
+                "options": ["Fruits", "Sea foods", "Grains", "Vegetables"],
+                "correct_answer": "B"
+            }
+        ]
+    }
+]
+
 # Convert PDF content to text
 def pdf_to_text(pdf_file):
     pdf_reader = PyPDF2.PdfReader(pdf_file)
-    return "".join(page.extract_text() for page in pdf_reader.pages)
+    return "".join(page.extract_text() for page in pdf_reader.pages if page.extract_text())
 
 # Parse MCQ text from extracted PDF text
 def parse_mcq_text(text):
@@ -89,72 +123,27 @@ def upload_file():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Endpoint to retrieve the exam data
-@app.route('/exam', methods=['GET'])
-def get_exam():
-    try:
-        with open('exam_data.json', 'r') as json_file:
-            exam_data = json.load(json_file)
-        return jsonify(exam_data), 200
-    except FileNotFoundError:
-        return jsonify({'error': 'Exam data not found'}), 404
+# Endpoint to retrieve predefined exams
+@app.route('/predefined-exams', methods=['GET'])
+def get_predefined_exams():
+    return jsonify(predefined_exams)
 
-# Endpoint to submit answers and calculate score
-@app.route('/submit', methods=['POST'])
-def submit_exam():
-    user_answers = request.json
-    try:
-        with open('exam_answers.json', 'r') as json_file:
-            correct_answers = json.load(json_file)
-    except FileNotFoundError:
-        return jsonify({'error': 'Answer key not found'}), 404
+# Endpoint to convert user text to PDF
+@app.route('/generate-pdf', methods=['POST'])
+def generate_pdf():
+    data = request.json.get('text')
+    if not data:
+        return jsonify({"error": "No text provided"}), 400
 
-    results = []
-    score = 0
-    total = len(correct_answers)
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.set_font("Arial", size=12)
+    pdf.multi_cell(0, 10, data)
+    pdf_output_path = 'generated_output.pdf'
+    pdf.output(pdf_output_path)
 
-    for question_id, user_answer in user_answers.items():
-        correct_answer = correct_answers.get(str(question_id))
-        is_correct = user_answer == correct_answer
-        if is_correct:
-            score += 1
-
-        results.append({
-            'question_id': int(question_id),
-            'user_answer': user_answer,
-            'correct_answer': correct_answer,
-            'is_correct': is_correct
-        })
-
-    percentage = (score / total) * 100 if total > 0 else 0
-
-    return jsonify({
-        'score': score,
-        'total': total,
-        'percentage': percentage,
-        'results': results
-    })
-
-# Endpoint to save user answers
-@app.route('/save-answers', methods=['POST'])
-def save_answers():
-    try:
-        user_answers = request.json
-        with open('user_answers.json', 'w') as json_file:
-            json.dump(user_answers, json_file, indent=2)
-        return jsonify({'message': 'Answers saved successfully'}), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-# Serve React frontend
-@app.route('/')
-def serve():
-    return send_from_directory(app.static_folder, 'index.html')
-
-# Serve any other static file (CSS, JS, etc.)
-@app.route('/<path:path>')
-def serve_static(path):
-    return send_from_directory(app.static_folder, path)
+    return send_file(pdf_output_path, as_attachment=True)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(debug=True)
