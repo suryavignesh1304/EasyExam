@@ -10,15 +10,15 @@ const TextToPdf: React.FC = () => {
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         if (!text) {
-          return;
+            return;
         }
 
         setLoading(true);
         setError(null);
 
         try {
-            const response = await axios.post('https://exameasy.up.railway.app//text-to-pdf', { text });
-            setGeneratedFile(response.data.filename);
+            const response = await axios.post('http://localhost:5000/text-to-pdf', { text });
+            setGeneratedFile(response.data.file_path); // Use the file_path returned from backend
         } catch (error) {
             setError('Error generating PDF. Please try again.');
             console.error('Error generating PDF:', error);
@@ -55,7 +55,7 @@ const TextToPdf: React.FC = () => {
                     type="submit"
                     disabled={!text || loading}
                     className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
-                     disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {loading ? 'Generating PDF...' : 'Generate PDF'}
                 </button>
@@ -69,7 +69,7 @@ const TextToPdf: React.FC = () => {
                 <div className="mt-4">
                     <p className="font-semibold">PDF generated successfully!</p>
                     <a
-                        href={`https://exameasy.up.railway.app//${generatedFile}`}
+                        href={`http://localhost:5000${generatedFile}`}
                         download
                         className="mt-2 inline-block bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
                     >

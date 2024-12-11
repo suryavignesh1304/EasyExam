@@ -1,0 +1,29 @@
+{
+  "title": "Advanced Python Quiz",
+  "questions": [
+    {
+      "id": 0,
+      "question": "What does the 'yield' keyword do?",
+      "options": [
+        "Create a generator",
+        "Return a value",
+        "Exit a function",
+        "None of the above"
+      ]
+    },
+    {
+      "id": 1,
+      "question": "What is a decorator?",
+      "options": [
+        "A function wrapper",
+        "An iterator",
+        "A loop construct",
+        "A data type"
+      ]
+    }
+  ],
+  "answers": {
+    "0": "Create a generator",
+    "1": "A function wrapper"
+  }
+}

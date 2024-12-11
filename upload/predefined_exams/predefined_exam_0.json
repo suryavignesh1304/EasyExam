@@ -1,0 +1,29 @@
+{
+  "title": "Basic Python Quiz",
+  "questions": [
+    {
+      "id": 0,
+      "question": "What is Python?",
+      "options": [
+        "A programming language",
+        "A snake",
+        "A framework",
+        "None of the above"
+      ]
+    },
+    {
+      "id": 1,
+      "question": "Which keyword is used for functions?",
+      "options": [
+        "def",
+        "function",
+        "lambda",
+        "func"
+      ]
+    }
+  ],
+  "answers": {
+    "0": "A programming language",
+    "1": "def"
+  }
+}

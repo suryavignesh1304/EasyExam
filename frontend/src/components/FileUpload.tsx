@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { uploadPDF } from '../api';
 
 const FileUpload: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -10,16 +10,7 @@ const FileUpload: React.FC = () => {
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
-      const selectedFile = event.target.files[0];
-      const maxSizeInBytes = 5 * 1024 * 1024;
-
-      if (selectedFile.size > maxSizeInBytes) {
-        setError('File size exceeds 5MB. Please select a smaller file.');
-        setFile(null);
-      } else {
-        setFile(selectedFile);
-        setError(null);
-      }
+      setFile(event.target.files[0]);
     }
   };
 
@@ -30,8 +21,15 @@ const FileUpload: React.FC = () => {
     setLoading(true);
     setError(null);
 
+    const formData = new FormData();
+    formData.append('file', file);
+
     try {
-      await uploadPDF(file);
+      await axios.post('http://localhost:5000/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       navigate('/exam-setup');
     } catch (error) {
       setError('Error uploading file. Please try again.');

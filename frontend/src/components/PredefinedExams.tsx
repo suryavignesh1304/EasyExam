@@ -1,137 +1,112 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { Book, ChevronRight, Loader } from 'lucide-react';
 
-interface PredefinedExam {
-    id: string;
-    title: string;
-    description: string;
+interface Question {
+  id: number;
+  question: string;
+  options: string[];
+}
+
+interface Exam {
+  title: string;
+  questions: Question[];
+  answers?: Record<string, string>;
 }
 
 const PredefinedExams: React.FC = () => {
-    const [exams, setExams] = useState<PredefinedExam[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const navigate = useNavigate();
+  const [examId, setExamId] = useState<number | null>(null);
+  const [examData, setExamData] = useState<Exam | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        const fetchExams = async () => {
-            try {
-                const response = await axios.get('https://exameasy.up.railway.app//predefined-exams');
-                setExams(response.data);
-                setLoading(false);
-            } catch (err) {
-                console.error('Error fetching predefined exams:', err);
-                setError('Failed to load predefined exams. Please try again later.');
-                setLoading(false);
-            }
-        };
-
-        fetchExams();
-    }, []);
-
-    const handleExamClick = (examId: string) => {
-        navigate(`/exam/${examId}`);
-    };
-
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1
-            }
-        }
-    };
-
-    const itemVariants = {
-        hidden: { y: 20, opacity: 0 },
-        visible: {
-            y: 0,
-            opacity: 1
-        }
-    };
-
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center h-screen">
-                <Loader className="animate-spin h-8 w-8 text-blue-500" />
-            </div>
-        );
+  const fetchExam = async (id: number) => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Mock data for testing
+      const mockData: Record<number, Exam> = {
+        0: {
+          title: "Basic Python Quiz",
+          questions: [
+            { id: 0, question: "What is Python?", options: ["Programming language", "Snake", "Car"] },
+            { id: 1, question: "What is PEP?", options: ["Python Enhancement Proposal", "Pepper", "None"] },
+          ],
+        },
+        1: {
+          title: "Basic Flask Quiz",
+          questions: [
+            { id: 0, question: "What is Flask?", options: ["Web framework", "Beverage", "Container"] },
+          ],
+        },
+        2: {
+          title: "Advanced Python Quiz",
+          questions: [
+            { id: 0, question: "What is a metaclass?", options: ["Class of a class", "Superclass", "Subclass"] },
+          ],
+        },
+      };
+  
+      // Simulate server delay
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      if (mockData[id]) {
+        setExamData(mockData[id]);
+      } else {
+        throw new Error("Exam not found");
+      }
+    } catch (err) {
+      console.error("Error fetching exam data:", err);
+      setError("Failed to fetch exam data.");
+    } finally {
+      setLoading(false);
     }
-
-    if (error) {
-        return (
-            <div className="flex flex-col items-center justify-center h-screen">
-                <p className="text-red-500 text-xl mb-4">{error}</p>
-                <button
-                    onClick={() => window.location.reload()}
-                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                >
-                    Retry
-                </button>
-            </div>
-        );
+  };
+  
+  useEffect(() => {
+    if (examId !== null) {
+      fetchExam(examId);
     }
+  }, [examId]);
 
-    return (
-        <div className="container mx-auto px-4 py-8">
-            <motion.h1
-                className="text-3xl font-bold text-center text-blue-600 mb-8"
-                initial={{ opacity: 0, y: -50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-            >
-                Predefined Exams
-            </motion.h1>
-            <motion.div
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-            >
-                {exams.map((exam) => (
-                    <motion.div
-                        key={exam.id}
-                        className="bg-white rounded-lg shadow-lg overflow-hidden cursor-pointer transform transition duration-300 hover:scale-105"
-                        onClick={() => handleExamClick(exam.id)}
-                        variants={itemVariants}
-                    >
-                        <div className="p-6">
-                            <div className="flex items-center mb-4">
-                                <Book className="h-6 w-6 text-blue-500 mr-2" />
-                                <h2 className="text-xl font-semibold text-gray-800">{exam.title}</h2>
-                            </div>
-                            <p className="text-gray-600 mb-4">{exam.description}</p>
-                            <div className="flex items-center text-blue-500 font-semibold">
-                                Start Exam
-                                <ChevronRight className="ml-2 h-5 w-5" />
-                            </div>
-                        </div>
-                    </motion.div>
+  const handleExamSelect = (id: number) => {
+    setExamId(id);
+  };
+
+  return (
+    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
+      <h1 style={{ textAlign: 'center' }}>Predefined Exams</h1>
+      <div style={{ marginBottom: '20px' }}>
+        <label htmlFor="examId">Select Exam ID:</label>
+        <select
+          id="examId"
+          onChange={(e) => handleExamSelect(Number(e.target.value))}
+          style={{ marginLeft: '10px', padding: '5px' }}
+        >
+          <option value="" disabled selected>Select an exam</option>
+          <option value="0">Basic Python Quiz</option>
+          <option value="1">Basic Flask Quiz</option>
+          <option value="2">Advanced Python Quiz</option>
+        </select>
+      </div>
+
+      {loading && <p>Loading exam data...</p>}
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+
+      {examData && (
+        <div>
+          <h2>{examData.title}</h2>
+          {examData.questions.map((question) => (
+            <div key={question.id} style={{ marginBottom: '15px' }}>
+              <p><strong>Q{question.id + 1}:</strong> {question.question}</p>
+              <ul>
+                {question.options.map((option, index) => (
+                  <li key={index}>{option}</li>
                 ))}
-            </motion.div>
-            {exams.length === 0 && (
-                <p className="text-center text-gray-500 mt-8">No predefined exams available at the moment.</p>
-            )}
-            <motion.div
-                className="mt-12 text-center"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-            >
-                <button
-                    onClick={() => navigate('/')}
-                    className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded inline-flex items-center"
-                >
-                    <ChevronRight className="mr-2 h-5 w-5 transform rotate-180" />
-                    Back to Home
-                </button>
-            </motion.div>
+              </ul>
+            </div>
+          ))}
         </div>
-    );
+      )}
+    </div>
+  );
 };
 
 export default PredefinedExams;

@@ -1,0 +1,29 @@
+{
+  "title": "Basic Flask Quiz",
+  "questions": [
+    {
+      "id": 0,
+      "question": "What is Flask?",
+      "options": [
+        "A web framework",
+        "A library",
+        "A database",
+        "An IDE"
+      ]
+    },
+    {
+      "id": 1,
+      "question": "Flask is written in?",
+      "options": [
+        "Python",
+        "Java",
+        "C++",
+        "PHP"
+      ]
+    }
+  ],
+  "answers": {
+    "0": "A web framework",
+    "1": "Python"
+  }
+}
