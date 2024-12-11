@@ -25,7 +25,7 @@ const FileUpload: React.FC = () => {
     formData.append('file', file);
 
     try {
-      await axios.post('http://localhost:5000/upload', formData, {
+      await axios.post('https://exameasy.up.railway.app/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

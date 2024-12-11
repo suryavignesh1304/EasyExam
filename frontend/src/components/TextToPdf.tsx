@@ -17,7 +17,7 @@ const TextToPdf: React.FC = () => {
         setError(null);
 
         try {
-            const response = await axios.post('http://localhost:5000/text-to-pdf', { text });
+            const response = await axios.post('https://exameasy.up.railway.app/text-to-pdf', { text });
             setGeneratedFile(response.data.file_path); // Use the file_path returned from backend
         } catch (error) {
             setError('Error generating PDF. Please try again.');
@@ -69,7 +69,7 @@ const TextToPdf: React.FC = () => {
                 <div className="mt-4">
                     <p className="font-semibold">PDF generated successfully!</p>
                     <a
-                        href={`http://localhost:5000${generatedFile}`}
+                        href={`https://exameasy.up.railway.app${generatedFile}`}
                         download
                         className="mt-2 inline-block bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
                     >

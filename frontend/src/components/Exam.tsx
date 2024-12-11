@@ -38,7 +38,7 @@ const Exam: React.FC = () => {
   useEffect(() => {
     const fetchExamData = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/exam');
+        const response = await axios.get('https://exameasy.up.railway.app/exam');
         setExamData(response.data);
       } catch (error) {
         console.error('Error fetching exam data:', error);
@@ -75,7 +75,7 @@ const Exam: React.FC = () => {
     if (!examData) return;
 
     try {
-      const response = await axios.post('http://localhost:5000/submit', selectedAnswers);
+      const response = await axios.post('https://exameasy.up.railway.app/submit', selectedAnswers);
       setExamResult(response.data);
     } catch (error) {
       console.error('Error submitting exam:', error);
