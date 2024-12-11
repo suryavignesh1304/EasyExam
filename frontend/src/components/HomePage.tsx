@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { useState } from 'react'
-import { Upload, FileText, Zap, Book, FileUp, Edit3, HelpCircle } from 'lucide-react'
+import { Upload, FileText, Zap, Book, Edit3, HelpCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 export default function HomePage() {
@@ -77,7 +77,6 @@ export default function HomePage() {
                             { icon: <FileText size={40} />, title: 'Automatic Extraction', description: 'AI-powered question recognition', path: '/upload' },
                             { icon: <Zap size={40} />, title: 'Customizable Formats', description: 'Tailor the CBT to your needs', path: '/upload' },
                             { icon: <Book size={40} />, title: 'Predefined Exams', description: 'Start with ready-made tests', path: '/predefined-exams' },
-                            { icon: <FileUp size={40} />, title: 'PDF Converter', description: 'Convert PDFs to CBT format', path: '/pdf-converter' },
                             { icon: <Edit3 size={40} />, title: 'Text to PDF', description: 'Create PDFs from text input', path: '/text-to-pdf' },
                             { icon: <HelpCircle size={40} />, title: 'PDF Instructions', description: 'Learn about PDF structure', path: '/pdf-instructions' }
                         ].map((feature, index) => (
